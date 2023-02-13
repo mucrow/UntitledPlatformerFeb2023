@@ -23,7 +23,7 @@ namespace Upf23 {
       _rigidbody2D.velocity = velocity;
     }
 
-    public void OnFire(InputValue value) => _rigidbody2D.AddForce(new Vector2(0, _jumpForce));
+    public void OnJump(InputValue value) => _rigidbody2D.AddForce(new Vector2(0, _jumpForce));
     public void OnMove(InputValue value) => _moveInput = value.Get<Vector2>().x;
   }
 }
