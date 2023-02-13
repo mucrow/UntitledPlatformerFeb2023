@@ -1,0 +1,5 @@
+- [ ] make some placeholder sprites
+- [ ] test 2D lighting tutorial
+- [ ] camera follow
+- [ ] test Tiled Map Editor integration
+- [ ] integrate SebLague platforming engine
