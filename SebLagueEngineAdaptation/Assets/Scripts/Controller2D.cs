@@ -5,6 +5,7 @@ using UnityEngine;
 namespace Slea {
   [RequireComponent(typeof(BoxCollider2D))]
   public class Controller2D: MonoBehaviour {
+    [SerializeField] LayerMask _collisionMask;
     [SerializeField] int _horizontalRayCount = 4;
     [SerializeField] int _verticalRayCount = 4;
 
@@ -18,13 +19,61 @@ namespace Slea {
 
     void Awake() {
       _boxCollider = GetComponent<BoxCollider2D>();
+      _calculateRaySpacing();
     }
 
-    void Update() {
+    // TODO rename parameter position delta ? this is not velocity, at least not per second. it is multiplied by Time.deltaTime in Player#Update where it is called.
+    public void Move(Vector3 velocity) {
       _updateRaycastOrigins();
-      _calculateRaySpacing();
+
+      if (velocity.x != 0) {
+        _horizontalCollisions(ref velocity);
+      }
+      if (velocity.y != 0) {
+        _verticalCollisions(ref velocity);
+      }
+
+      transform.Translate(velocity);
+    }
+
+    void _horizontalCollisions(ref Vector3 velocity) {
+      float directionX = Mathf.Sign(velocity.x);
+      float rayLength = Mathf.Abs(velocity.x) + _skinWidth;
+
+      for (int i = 0; i < _horizontalRayCount; ++i) {
+        Vector2 rayOrigin = directionX < 0 ? _raycastOrigins.BottomLeft : _raycastOrigins.BottomRight;
+        // why did we delete `+ _velocity.x` ? why does it exist in vertical collisions ?
+        rayOrigin += Vector2.up * (_horizontalRaySpacing * i);
+        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX, rayLength, _collisionMask);
+
+        Debug.DrawRay(rayOrigin, Vector2.right * directionX * rayLength, Color.red);
+
+        if (hit) {
+          // set our X velocity to only the distance needed to collide
+          velocity.x = (hit.distance - _skinWidth) * directionX;
+          // shortens the ray length so subsequent vertical rays do not hit farther than an earlier one
+          rayLength = hit.distance;
+        }
+      }
+    }
+
+    void _verticalCollisions(ref Vector3 velocity) {
+      float directionY = Mathf.Sign(velocity.y);
+      float rayLength = Mathf.Abs(velocity.y) + _skinWidth;
+
       for (int i = 0; i < _verticalRayCount; ++i) {
-        Debug.DrawRay(_raycastOrigins.BottomLeft + Vector2.right * _verticalRaySpacing * i, Vector2.up * -2, Color.red);
+        Vector2 rayOrigin = directionY < 0 ? _raycastOrigins.BottomLeft : _raycastOrigins.TopLeft;
+        rayOrigin += Vector2.right * (_verticalRaySpacing * i + velocity.x);
+        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY, rayLength, _collisionMask);
+
+        Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength, Color.red);
+
+        if (hit) {
+          // set our Y velocity to only the distance needed to collide
+          velocity.y = (hit.distance - _skinWidth) * directionY;
+          // shortens the ray length so subsequent vertical rays do not hit farther than an earlier one
+          rayLength = hit.distance;
+        }
       }
     }
 
