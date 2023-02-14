@@ -63,6 +63,9 @@ namespace Slea {
 
       for (int i = 0; i < _verticalRayCount; ++i) {
         Vector2 rayOrigin = directionY < 0 ? _raycastOrigins.BottomLeft : _raycastOrigins.TopLeft;
+        // we add velocity.x here as well to ensure we're raycasting from where the player will be
+        // after moving horizontally. if we called _horizontalCollisions after _verticalCollisions,
+        // i'm pretty sure we would be adding velocity.y to the _horizontalCollisions rayOrigin.
         rayOrigin += Vector2.right * (_verticalRaySpacing * i + velocity.x);
         RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY, rayLength, _collisionMask);
 
